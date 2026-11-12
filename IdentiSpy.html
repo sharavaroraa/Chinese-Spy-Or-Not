@@ -1,0 +1,484 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>IdentiSpy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&family=Special+Elite&display=swap">
+<style>
+/* Layout: one narrow case-file column with a top nav. Five hash-routed pages: test, case files, field guide, target scale, about. */
+:root {
+  --bg: #11161c;
+  --panel: #18202a;
+  --line: #2c3743;
+  --fg: #e7eaed;
+  --muted: #9ba7b3;
+  --accent: #6fb8d6;
+  --accent-ink: #0b1a22;
+  --stamp: #e2614f;
+  --ok: #5fc59a;
+  --warn: #e0b04a;
+  --display: "Special Elite", "Courier New", monospace;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #dde2dd; --panel: #eef1ed; --line: #b9c2bb; --fg: #161c22; --muted: #55616b;
+    --accent: #1f6d8c; --accent-ink: #ffffff; --stamp: #b3261e; --ok: #1f7a55; --warn: #8a5d00;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #dde2dd; --panel: #eef1ed; --line: #b9c2bb; --fg: #161c22; --muted: #55616b;
+  --accent: #1f6d8c; --accent-ink: #ffffff; --stamp: #b3261e; --ok: #1f7a55; --warn: #8a5d00;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55;
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3, legend, .stamp { font-family: var(--display); font-weight: 400; text-wrap: balance; }
+h2 { font-size: 26px; line-height: 1.2; margin: 0; }
+h3 { font-size: 19px; line-height: 1.25; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+.mono { font-family: var(--data); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* nav */
+.nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.brand { font-family: var(--display); font-size: 24px; color: var(--fg); text-decoration: none; }
+.redact { background: var(--fg); color: var(--bg); padding: 0 .1em; margin-left: .04em; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 6px 9px; border: 1px solid transparent; }
+.links a:hover { color: var(--fg); border-color: var(--line); }
+.links a[aria-current="page"] { color: var(--fg); border-color: var(--accent); }
+.links a:focus-visible, .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.page { display: none; flex-direction: column; gap: 28px; }
+.page.on { display: flex; }
+.head { display: flex; flex-direction: column; gap: 10px; }
+.lede { max-width: 58ch; color: var(--fg); }
+.lede.dim { color: var(--muted); }
+
+/* home header */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 250px); gap: 22px 28px; align-items: center; }
+h1 { font-size: clamp(44px, 12vw, 76px); line-height: 1; margin: 0; letter-spacing: .01em; }
+.tagline { margin-top: 10px; font-size: 18px; max-width: 30ch; text-wrap: balance; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+.facts li { font-family: var(--data); font-size: 11.5px; color: var(--muted); border: 1px solid var(--line); padding: 4px 9px; letter-spacing: .04em; }
+.sample { border: 1px dashed var(--line); background: var(--panel); padding: 14px; display: grid; gap: 10px; transform: rotate(1.2deg); }
+.sample .stamp { font-size: 20px; padding: 6px 10px; align-self: start; }
+.sample .row { display: flex; justify-content: space-between; font-family: var(--data); font-size: 12px; color: var(--muted); }
+.sample .row b { color: var(--fg); font-weight: 500; }
+.topbar { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+.topbar b { color: var(--stamp); font-weight: 500; }
+
+/* form */
+.part { display: flex; flex-direction: column; gap: 14px; }
+.part-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.part-head h2 { font-size: 22px; }
+fieldset.q { margin: 0; padding: 16px; border: 1px solid var(--line); background: var(--panel); min-width: 0; }
+legend { padding: 0 8px; margin-left: -8px; font-size: 17px; line-height: 1.35; max-width: 100%; }
+legend .n { font-family: var(--data); font-size: 12px; color: var(--accent); margin-right: 8px; letter-spacing: .06em; }
+.opts { display: grid; gap: 6px; margin-top: 8px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 9px 11px; border: 1px solid transparent; cursor: pointer; }
+.opt:hover { border-color: var(--line); }
+.opt input { margin: 3px 0 0; accent-color: var(--accent); flex: none; width: 16px; height: 16px; }
+.opt span { min-width: 0; }
+.opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.runbar { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); }
+.progress { flex: 1 1 180px; min-width: 0; }
+.bar { height: 6px; background: var(--line); margin-top: 5px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+button, .btn { font: 500 14px/1 var(--body); letter-spacing: .02em; padding: 13px 18px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; text-decoration: none; display: inline-block; }
+button.ghost, .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+button:hover:not(:disabled), .btn:hover { filter: brightness(1.1); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, .btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+/* stamps and gauges */
+.stamp { display: inline-block; font-size: clamp(24px, 7vw, 38px); line-height: 1.1; padding: 8px 14px; border: 3px solid currentColor; transform: rotate(-2.5deg); text-transform: uppercase; letter-spacing: .04em; max-width: 100%; }
+.stamp.ok { color: var(--ok); } .stamp.warn { color: var(--warn); } .stamp.stamp { color: var(--stamp); }
+.gauge-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; margin-bottom: 6px; }
+.gauge-head b { font-family: var(--data); font-weight: 500; font-size: 20px; font-variant-numeric: tabular-nums; }
+.gauge { position: relative; height: 12px; background: var(--line); }
+.gauge i { display: block; height: 100%; width: 0; transition: width .7s cubic-bezier(.2,.7,.2,1); }
+.gauge::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--panel) calc(10% - 1px) 10%); }
+
+/* result */
+#result { display: none; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+#result.on { display: flex; }
+.sharecard { width: 100%; max-width: 440px; aspect-ratio: 1 / 1; border: 1px solid var(--line); background: var(--panel); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
+.sharecard .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sharecard .mark { font-family: var(--display); font-size: 20px; }
+.sharecard .tier { font-size: 13px; color: var(--muted); }
+.sharecard .tier b { color: var(--fg); font-weight: 600; }
+.sharecard .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-family: var(--data); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sharecard .gauges { display: grid; gap: 14px; }
+.sharecard .gauge-head b { font-size: 17px; }
+.verdict-text { max-width: 56ch; }
+.ladder { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.ladder div { font-size: 11px; line-height: 1.25; padding: 7px 6px; border-top: 3px solid var(--line); color: var(--muted); overflow-wrap: anywhere; }
+.ladder div.here { border-top-color: var(--accent); color: var(--fg); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.share { display: grid; gap: 10px; }
+.share textarea { width: 100%; min-height: 92px; resize: vertical; font: 12.5px/1.5 var(--data); color: var(--fg); background: var(--bg); border: 1px solid var(--line); padding: 10px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.toast { font-family: var(--data); font-size: 12px; color: var(--ok); min-height: 1.2em; }
+.tip { font-size: 13px; color: var(--muted); max-width: 60ch; }
+.next { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
+
+/* content pages */
+.cards { display: grid; gap: 14px; }
+.card { border: 1px solid var(--line); background: var(--panel); padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.card .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.tag { font-family: var(--data); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; border: 1px solid currentColor; }
+.tag.convicted { color: var(--stamp); } .tag.reported { color: var(--warn); } .tag.counter { color: var(--ok); } .tag.pattern { color: var(--accent); }
+.srcs { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; display: grid; gap: 4px; max-width: 62ch; }
+.callout b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cols .lab { margin-bottom: 2px; }
+.tierlist { display: grid; gap: 12px; }
+.tierlist .card { grid-template-columns: 64px minmax(0, 1fr); align-items: start; }
+.lvl { font-family: var(--data); font-size: 30px; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+footer { border-top: 1px solid var(--line); padding-top: 14px; font-size: 12.5px; color: var(--muted); display: grid; gap: 8px; }
+footer p { max-width: 64ch; }
+
+@media (max-width: 560px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 460px) {
+  .ladder { grid-template-columns: 1fr; }
+  .ladder div { border-top: 0; border-left: 3px solid var(--line); }
+  .ladder div.here { border-left-color: var(--accent); }
+  .tierlist .card { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .gauge i, .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="#home">Identi<span class="redact">Spy</span></a>
+    <div class="links">
+      <a href="#home" data-link="home">Test</a>
+      <a href="#cases" data-link="cases">Case files</a>
+      <a href="#field-guide" data-link="field-guide">Field guide</a>
+      <a href="#scale" data-link="scale">Target scale</a>
+      <a href="#about" data-link="about">About</a>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <main class="page" data-page="home">
+    <header>
+      <div class="hero">
+        <div>
+          <div class="topbar mono"><span>Form 7-B &middot; Partner Assessment</span><span><b>Satire</b></span></div>
+          <h1 style="margin-top:18px">Identi<span class="redact">Spy</span></h1>
+          <p class="tagline">Is your partner a spy, or are you just not that interesting?</p>
+          <ul class="facts">
+            <li>10 questions</li>
+            <li>About 90 seconds</li>
+            <li>Behavior only, never nationality</li>
+          </ul>
+        </div>
+        <aside class="sample" aria-label="Sample result">
+          <span class="mono">Sample file IS-0000-AA</span>
+          <div class="stamp ok">Not a spy. Just nosy.</div>
+          <div class="row"><span>Suspicion</span><b>72%</b></div>
+          <div class="row"><span>Target value</span><b>8%</b></div>
+          <div class="row"><span>Tier</span><b>Wi-Fi password only</b></div>
+        </aside>
+      </div>
+    </header>
+
+    <form id="form" autocomplete="off">
+      <section class="part" id="partA"></section>
+      <section class="part" id="partB" style="margin-top:28px"></section>
+      <div class="runbar">
+        <div class="progress"><span class="mono" id="count">0 of 10 answered</span><div class="bar"><i id="barfill"></i></div></div>
+        <button type="submit" id="run" disabled>Open the file</button>
+      </div>
+    </form>
+    <section id="result" aria-live="polite"></section>
+  </main>
+
+  <!-- CASES -->
+  <main class="page" data-page="cases">
+    <div class="head">
+      <span class="mono">Case files &middot; updated 12 Nov 2026</span>
+      <h2>What the reported cases look like</h2>
+      <p class="lede">Real cases come from patient contact with someone who has access. The targets are officials, military staff and technology executives. Every entry below links to its reporting, and allegations are labelled as allegations.</p>
+    </div>
+    <div class="callout"><b>The pattern</b><p>Access, patience and personal contact. Nationality is not part of the pattern, and China's own security ministry warns its staff about honey traps too.</p></div>
+    <div class="cards" id="caselist"></div>
+  </main>
+
+  <!-- FIELD GUIDE -->
+  <main class="page" data-page="field-guide">
+    <div class="head">
+      <span class="mono">Field guide &middot; Part B explained</span>
+      <h2>Six red flags and what they usually mean</h2>
+      <p class="lede">One flag is a personality. A cluster, aimed at someone with access, is worth a quiet word with your security team. Here is each flag next to its most likely boring explanation.</p>
+    </div>
+    <div class="cards" id="flaglist"></div>
+    <div class="callout"><b>Rule of thumb</b><p>Count the flags, then ask what you hold. Four flags and a Wi-Fi password is a clingy partner. Two flags and an export licence is a phone call to compliance.</p></div>
+  </main>
+
+  <!-- SCALE -->
+  <main class="page" data-page="scale">
+    <div class="head">
+      <span class="mono">Target scale &middot; Part A explained</span>
+      <h2>How much is your access worth?</h2>
+      <p class="lede">Spies do not approach random people. The tier below decides how much effort anyone would spend on you. Most people land on level 0 and should enjoy it.</p>
+    </div>
+    <div class="tierlist" id="tierlist"></div>
+  </main>
+
+  <!-- ABOUT -->
+  <main class="page" data-page="about">
+    <div class="head">
+      <span class="mono">About &middot; method and limits</span>
+      <h2>How IdentiSpy scores you</h2>
+    </div>
+    <div class="cards">
+      <div class="card"><h3>Two scores</h3><p>Part A has four questions on a 0 to 3 scale and becomes your Target value. Part B has six questions on the same scale and becomes the Suspicion index. Each is shown as a percentage of its maximum.</p></div>
+      <div class="card"><h3>Nine verdicts</h3><p>Each score is sorted into low, medium or high. The pair picks the stamp, from Clear to Code red. A low target with a high suspicion reads as nosy, because nobody budgets an operation against someone with nothing to take.</p></div>
+      <div class="card"><h3>What it never does</h3><p>It never asks where anyone is from, never stores answers, and never sends anything off this page. Your answers stay in your browser tab.</p></div>
+      <div class="card"><h3>What it is</h3><p>A joke built from ten multiple-choice answers. It is not intelligence work and it proves nothing about a real person. If something feels wrong, talk to your partner or your security team.</p></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Satire. Scores come from a ten-question quiz and say nothing about anyone's background. Reported allegations are not proof.</p>
+    <p>Case files link to their original reporting. Dates and details come from those reports.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  /* ---------- data ---------- */
+  var A = [
+    { q: "What can you get at work that most people cannot?",
+      o: ["Nothing. I make my own coffee.", "A few shared passwords.", "Customer data and internal documents.", "Export licences, defence contracts or state-level secrets."] },
+    { q: "How well known are you?",
+      o: ["Group chat admin.", "Local business owner.", "Recognised across my industry.", "Governments schedule meetings around me."] },
+    { q: "Who picks up when you call?",
+      o: ["Family and a few friends.", "A handful of useful founders.", "Ministers and CEOs.", "Heads of state."] },
+    { q: "How much of your work touches chips, defence or export controls?",
+      o: ["None.", "A little, at the edges.", "Quite a lot.", "It is the whole job."] }
+  ];
+  var B = [
+    { q: "How does your partner react when you talk about work?",
+      o: ["Eyes glaze over, change of subject.", "Normal curiosity.", "Detailed questions every week.", "Asks who reports to whom, and who signs off."] },
+    { q: "How did you end up at the same events?",
+      o: ["We never go to the same ones.", "Mutual friends introduced us.", "They turn up at a lot of my conferences.", "Every conference. Even the invite-only ones."] },
+    { q: "What do they want to do with your contacts?",
+      o: ["Nothing. They forget names.", "Meet my friends, like a normal person.", "Meet my boss and my investors.", "Wants an introduction to specific people on my list."] },
+    { q: "What happens with gifts and trips?",
+      o: ["I pay for most things.", "We split dinner.", "Generous gifts out of nowhere.", "A free trip abroad to meet someone they know."] },
+    { q: "How do they treat your phone and laptop?",
+      o: ["Never touch them.", "Borrow my phone to play music.", "Offer to fix or update my laptop.", "Know my passcode and never said how."] },
+    { q: "How does their backstory hold up?",
+      o: ["Consistent, with embarrassing stories.", "A few gaps, nothing odd.", "Details shift between tellings.", "No old friends, no photos from before I met them."] }
+  ];
+  var TIERS = ["Wi-Fi password only", "Mid-level with access", "Name in the industry", "On a head of state's call list", "Trillion-dollar chip CEO"];
+  var V = {
+    "lo-lo": ["Clear", "Nothing to see. Your partner is dating you, and your files are not worth anyone's budget.", "ok"],
+    "lo-mid": ["Not a spy. Just nosy.", "Nobody funds an operation against a target with nothing to steal. Curious questions usually mean curiosity.", "ok"],
+    "lo-hi": ["Probably just intense", "The behavior is odd, but there is little here to take. Have a direct conversation, not an investigation.", "warn"],
+    "mid-lo": ["Clear", "You hold some access and your partner shows no interest in it. Keep it that way.", "ok"],
+    "mid-mid": ["Watch list", "Mixed signals and some access. Lock your laptop, keep work talk at work, enjoy dinner.", "warn"],
+    "mid-hi": ["Elevated", "You hold something worth having and the behavior matches the reported patterns. Tell your security or compliance team.", "stamp"],
+    "hi-lo": ["Clear, stay sharp", "You are a high-value target with a quiet partner. Good. Nothing changes.", "ok"],
+    "hi-mid": ["Elevated", "People with your access get approached. Mention the pattern to your security team before it becomes a story.", "warn"],
+    "hi-hi": ["Code red", "Stop reading this page and call your security team. Do not confront anyone yourself.", "stamp"]
+  };
+
+  var CASES = [
+    { tag: "convicted", label: "Sentenced", date: "February 2026",
+      title: "The campaign adviser and the mayor",
+      body: "A political adviser who was romantically involved with a California city council member was sentenced to four years for acting as an unregistered agent of China. The council member was not accused of wrongdoing at the time, and reporting later said she agreed to plead guilty to acting as an illegal agent.",
+      src: [["Mothership", "https://mothership.sg/2026/02/chinese-jail-foreign-agent/"], ["Newsweek", "https://www.newsweek.com/chinas-spies-surge-worldwide-but-some-are-getting-caught-12073822"]] },
+    { tag: "reported", label: "Reported, not charged", date: "2011 to 2015, reported 2020",
+      title: "The fundraiser who kept meeting rising politicians",
+      body: "US counterintelligence reportedly believed a student-turned-volunteer worked for China's Ministry of State Security while cultivating ambitious local politicians. The FBI gave one congressman a defensive briefing around 2015. He cut ties and was not accused of wrongdoing. She left the country that year.",
+      src: [["Axios", "https://www.axios.com/2020/12/08/china-spy-california-politicians"]] },
+    { tag: "reported", label: "Arrested, suspected", date: "May 2026",
+      title: "The couple posing as interpreters",
+      body: "German police arrested a married couple on suspicion of spying for China. They were believed to have posed as interpreters or car-industry employees to make contacts.",
+      src: [["Daily Mirror", "https://www.dailymirror.lk/print/international/Police-in-Germany-arrest-married-couple-on-suspicion-of-spying-for-China/107-340838"]] },
+    { tag: "convicted", label: "Jailed", date: "October 2026",
+      title: "Two men who tried to recruit sailors",
+      body: "Two Chinese nationals arrested in 2025 for gathering intelligence on US Navy sites and recruiting service members were jailed. They used cash payments and dead drops.",
+      src: [["Al Jazeera", "https://aljazeera.com/news/2026/10/31/us-jails-two-chinese-nationals-for-spying"]] },
+    { tag: "counter", label: "Other direction", date: "January 2026",
+      title: "China warns its own staff about honey traps",
+      body: "China's state security ministry warned defence and technology workers about honey traps after an official was blackmailed into giving up secrets following a trip abroad. The same tactic is used against every country's staff.",
+      src: [["South China Morning Post", "https://www.scmp.com/news/china/military/article/3340140/china-warns-honey-trap-risks-defence-sector-after-official-jailed-espionage"]] },
+    { tag: "reported", label: "Reported, unproven", date: "29 October 2026",
+      title: "The chip customer and the chip chief",
+      body: "The New York Times reported that US intelligence believed an executive at a company that buys Nvidia chips was a Chinese asset who targeted Nvidia's CEO. China called the claims groundless speculation. No charge has been brought against the CEO, and there is no public proof of what, if anything, was passed on.",
+      src: [["New York Times via GV Wire", "https://gvwire.com/2026/10/29/nvidia-chief-seen-as-target-of-chinese-spy-plot/"], ["South China Morning Post", "https://www.scmp.com/tech/tech-war/article/3372743/china-dismisses-us-report-suspected-spy-targeting-nvidia-ceo-jensen-huang-groundless?pgtype=topic"]] }
+  ];
+  var FLAGS = [
+    { t: "Detailed questions about your work", boring: "They are proud of you, or they are bored on Tuesdays.", real: "Reported cases describe a slow slide from small talk to specifics: who decides, who signs, what you are building." },
+    { t: "Shows up wherever you go", boring: "Same industry, same events. It happens.", real: "A pattern of turning up at invite-only rooms is what investigators say they watch for." },
+    { t: "Wants introductions to specific people", boring: "They want a better job, and you know people.", real: "Cultivation cases often end with a request to meet someone on a short list." },
+    { t: "Gifts and free trips with strings", boring: "They are generous and they like you.", real: "Reported recruitment pitches pair money and travel with a person they would like you to meet." },
+    { t: "Interest in your phone and laptop", boring: "They are the family IT person.", real: "Access to your devices is the shortcut around every other security step." },
+    { t: "A backstory that shifts", boring: "Everyone embellishes. Tell the fish story the same way twice.", real: "Cover identities tend to have no old friends and no history before the first meeting." }
+  ];
+  var TIERINFO = [
+    ["Wi-Fi password only", "Your biggest secret is your streaming tier. Nobody runs an operation against this.", "Best case. Enjoy the quiet."],
+    ["Mid-level with access", "Customer lists, internal documents, a few shared logins. Interesting to competitors.", "Commercial spies would call. Intelligence services would not."],
+    ["Name in the industry", "Speaking slots, introductions and a circle people want to enter.", "You get approached for who you know."],
+    ["On a head of state's call list", "Your calendar is the product. Every meeting is information.", "You have staff whose job is to say no for you."],
+    ["Trillion-dollar chip CEO", "Export licences and roadmaps move markets and governments.", "You have people for this. Several. Use them."]
+  ];
+
+  /* ---------- rendering of static pages ---------- */
+  var caseHtml = "";
+  CASES.forEach(function (c) {
+    caseHtml += '<article class="card"><div class="meta"><span class="tag ' + c.tag + '">' + c.label + '</span><span class="mono">' + c.date + '</span></div>' +
+      '<h3>' + c.title + '</h3><p>' + c.body + '</p><div class="srcs">' +
+      c.src.map(function (s) { return '<a href="' + s[1] + '" target="_blank" rel="noopener">' + s[0] + '</a>'; }).join("") + '</div></article>';
+  });
+  document.getElementById("caselist").innerHTML = caseHtml;
+
+  var flagHtml = "";
+  FLAGS.forEach(function (f, i) {
+    flagHtml += '<article class="card"><div class="meta"><span class="tag pattern">Flag ' + (i + 1) + '</span></div><h3>' + f.t + '</h3>' +
+      '<div class="cols"><div><div class="mono lab">Most likely</div><p>' + f.boring + '</p></div><div><div class="mono lab">In reported cases</div><p>' + f.real + '</p></div></div></article>';
+  });
+  document.getElementById("flaglist").innerHTML = flagHtml;
+
+  var tierHtml = "";
+  TIERINFO.forEach(function (t, i) {
+    tierHtml += '<article class="card"><div class="lvl">L' + i + '</div><div style="display:grid;gap:6px;min-width:0"><h3>' + t[0] + '</h3><p>' + t[1] + '</p><p class="tip">' + t[2] + '</p></div></article>';
+  });
+  document.getElementById("tierlist").innerHTML = tierHtml;
+
+  /* ---------- quiz form ---------- */
+  var form = document.getElementById("form");
+  var total = A.length + B.length;
+  function part(el, title, tag, list, offset) {
+    var h = '<div class="part-head"><h2>' + title + '</h2><span class="mono">' + tag + '</span></div>';
+    list.forEach(function (item, i) {
+      var n = offset + i + 1, name = "q" + n;
+      h += '<fieldset class="q"><legend><span class="n">Q' + (n < 10 ? "0" + n : n) + '</span>' + item.q + '</legend><div class="opts">';
+      item.o.forEach(function (text, s) {
+        h += '<label class="opt"><input type="radio" name="' + name + '" value="' + s + '"><span>' + text + '</span></label>';
+      });
+      h += '</div></fieldset>';
+    });
+    el.innerHTML = h;
+  }
+  part(document.getElementById("partA"), "Part A. What are you worth?", "Your side of the file", A, 0);
+  part(document.getElementById("partB"), "Part B. What are they doing?", "Their side of the file", B, A.length);
+
+  function readScores() {
+    var a = 0, b = 0, answered = 0;
+    for (var i = 1; i <= total; i++) {
+      var c = form.querySelector('input[name="q' + i + '"]:checked');
+      if (c) { answered++; if (i <= A.length) a += +c.value; else b += +c.value; }
+    }
+    return { a: a, b: b, answered: answered };
+  }
+  function update() {
+    var s = readScores();
+    document.getElementById("count").textContent = s.answered + " of " + total + " answered";
+    document.getElementById("barfill").style.width = (s.answered / total * 100) + "%";
+    document.getElementById("run").disabled = s.answered < total;
+  }
+  form.addEventListener("change", update);
+
+  function level(p) { return p < 34 ? "lo" : p < 67 ? "mid" : "hi"; }
+  function tone(p) { return p < 34 ? "var(--ok)" : p < 67 ? "var(--warn)" : "var(--stamp)"; }
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var s = readScores();
+    if (s.answered < total) return;
+    var tPct = Math.round(s.a / (A.length * 3) * 100);
+    var sPct = Math.round(s.b / (B.length * 3) * 100);
+    var tier = tPct < 20 ? 0 : tPct < 40 ? 1 : tPct < 60 ? 2 : tPct < 80 ? 3 : 4;
+    var v = V[level(tPct) + "-" + level(sPct)];
+    var d = new Date();
+    var dateStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    var mm = ("0" + (d.getMonth() + 1)).slice(-2), dd = ("0" + d.getDate()).slice(-2);
+    var code = "IS-" + mm + dd + "-" + ((s.a * 7 + s.b * 13 + 41) % 256).toString(16).toUpperCase().padStart(2, "0");
+    var share = "IdentiSpy case file " + code + "\nSuspicion index: " + sPct + "%\nTarget value: " + tPct + "% (" + TIERS[tier] + ")\nVerdict: " + v[0].toUpperCase() + "\n\nSatire. Nobody's nationality is checked.";
+
+    var h = '<div class="sharecard" id="sharecard">' +
+      '<div class="top"><span class="mark">Identi<span class="redact">Spy</span></span><span class="mono">' + code + '</span></div>' +
+      '<div><div class="stamp ' + v[2] + '">' + v[0] + '</div></div>' +
+      '<div class="gauges">' +
+        '<div><div class="gauge-head"><span>Suspicion index</span><b>' + sPct + '%</b></div><div class="gauge" role="img" aria-label="Suspicion index ' + sPct + ' percent"><i data-w="' + sPct + '" style="background:' + tone(sPct) + '"></i></div></div>' +
+        '<div><div class="gauge-head"><span>Target value</span><b>' + tPct + '%</b></div><div class="gauge" role="img" aria-label="Target value ' + tPct + ' percent"><i data-w="' + tPct + '" style="background:var(--accent)"></i></div></div>' +
+      '</div>' +
+      '<div class="tier">Tier: <b>' + TIERS[tier] + '</b></div>' +
+      '<div class="foot"><span>Opened ' + dateStr + '</span><span>Satire</span></div></div>' +
+      '<p class="verdict-text">' + v[1] + '</p>' +
+      '<div><div class="mono" style="margin-bottom:8px">Where you sit on the target scale</div><div class="ladder">' + TIERS.map(function (t, i) { return '<div' + (i === tier ? ' class="here"' : '') + '>' + t + '</div>'; }).join("") + '</div></div>' +
+      '<div class="share"><textarea id="shareText" readonly aria-label="Shareable result text"></textarea>' +
+      '<div class="actions"><button type="button" id="copy">Copy result</button>' +
+      '<a class="btn ghost" id="xlink" target="_blank" rel="noopener">Post on X</a>' +
+      '<button type="button" class="ghost" id="again">Start a new file</button></div>' +
+      '<div class="toast" id="toast"></div>' +
+      '<p class="tip">Screenshot the card above to share it. If you add the app link, put it in your first reply. X shows posts with links to fewer people.</p></div>' +
+      '<div class="next"><a href="#cases">Read the case files</a><a href="#field-guide">See the field guide</a><a href="#scale">Check the target scale</a></div>';
+
+    var res = document.getElementById("result");
+    res.innerHTML = h;
+    res.classList.add("on");
+    var ta = document.getElementById("shareText");
+    ta.value = share;
+    document.getElementById("xlink").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(share);
+
+    var fills = res.querySelectorAll(".gauge i");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { fills.forEach(function (f) { f.style.width = f.getAttribute("data-w") + "%"; }); });
+    });
+
+    document.getElementById("copy").addEventListener("click", function () {
+      var toast = document.getElementById("toast");
+      function ok() { toast.textContent = "Copied."; }
+      function fallback() { ta.focus(); ta.select(); toast.textContent = "Text selected. Copy it with your keyboard."; }
+      try { navigator.clipboard.writeText(share).then(ok, fallback); } catch (err) { fallback(); }
+    });
+    document.getElementById("again").addEventListener("click", function () {
+      form.reset(); update();
+      res.classList.remove("on"); res.innerHTML = "";
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    });
+    res.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+  update();
+
+  /* ---------- router ---------- */
+  var PAGES = ["home", "cases", "field-guide", "scale", "about"];
+  function route() {
+    var h = (location.hash || "").replace("#", "");
+    if (PAGES.indexOf(h) < 0) h = "home";
+    document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("on", p.getAttribute("data-page") === h); });
+    document.querySelectorAll("[data-link]").forEach(function (a) {
+      if (a.getAttribute("data-link") === h) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
+
+</body></html>
